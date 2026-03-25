@@ -46,14 +46,16 @@ pub struct TradingAgentSystem {
 
 impl TradingAgentSystem {
     pub async fn new(openai_client: OpenAIClient) -> Result<Self> {
+        let model_name = std::env::var("LLM_MODEL").unwrap_or_else(|_| "llama-3.3-70b-versatile".to_string());
+
         // Initialize market analyst agent
-        let market_analyst = AgentBuilder::new(openai_client.completion_model("gpt-4")).build();
+        let market_analyst = AgentBuilder::new(openai_client.completion_model(&model_name)).build();
 
         // Initialize risk manager agent
-        let risk_manager = AgentBuilder::new(openai_client.completion_model("gpt-4")).build();
+        let risk_manager = AgentBuilder::new(openai_client.completion_model(&model_name)).build();
 
         // Initialize execution specialist agent
-        let execution_specialist = AgentBuilder::new(openai_client.completion_model("gpt-4")).build();
+        let execution_specialist = AgentBuilder::new(openai_client.completion_model(&model_name)).build();
 
         Ok(Self {
             market_analyst,

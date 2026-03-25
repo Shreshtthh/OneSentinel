@@ -1,0 +1,69 @@
+[package]
+name = "rig-onechain-trader"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Framework
+rig-core = { path = "../rig-core", features = ["derive", "pdf", "all"] }
+rig-mongodb = { path = "../rig-mongodb" }
+
+# Core dependencies
+tokio = { version = "1.0", features = ["full"] }
+tokio-tungstenite = { version = "0.20.1", features = ["native-tls"] }
+anyhow = "1.0"
+thiserror = "1.0"
+async-trait = "0.1"
+futures = "0.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Environment
+dotenv = "0.15"
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json"] }
+
+# Utilities
+uuid = { version = "1.0", features = ["v4", "serde"] }
+base64 = "0.21"
+rand = "0.8"
+bip39 = { package = "tiny-bip39", version = "1.0" }
+
+# OneChain (Move-based)
+onechain_sdk = { git = "https://github.com/one-chain-labs/onechain.git", package = "sui-sdk" }
+shared_crypto = { git = "https://github.com/one-chain-labs/onechain.git", package = "shared-crypto" }
+fastcrypto = { git = "https://github.com/one-chain-labs/fastcrypto.git", rev = "7adb769537fdc2b1093a1790bbe1148ea811809b" }
+slip10_ed25519 = "0.1"
+bcs = "0.1"
+# DEX integration
+# Using Jupiter via HTTP API instead of direct SDK
+serde_qs = "0.12"  # For query string serialization
+url = "2.4"        # For URL manipulation
+
+# Social media integration
+twitter-v2 = "0.1"
+oauth2 = "4.4"
+
+# OpenAI
+openai = { version = "1.0.0-alpha.18" }
+
+# New dependencies
+oauth1 = "1.0"
+
+# MongoDB
+mongodb = { version = "3.2.0" }
+bson = { version = "3.1", features = ["chrono-0_4"] }
+bincode = "1.3.3"
+
+[dev-dependencies]
+tokio-test = "0.4"

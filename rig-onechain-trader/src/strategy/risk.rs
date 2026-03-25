@@ -4,6 +4,7 @@ use anyhow::Result;
 use crate::personality::StoicPersonality;
 use crate::execution::TradeAction;
 
+#[allow(dead_code)]
 pub struct RiskManager {
     config: StrategyConfig,
     max_position_per_token: f64,
@@ -161,14 +162,14 @@ impl RiskManager {
         risk_score.max(0.0).min(1.0)
     }
 
-    pub fn validate_position_size(&self, size_in_sol: f64, current_portfolio_value: f64) -> bool {
+    pub fn validate_position_size(&self, size_in_native: f64, current_portfolio_value: f64) -> bool {
         // Check if position size is within limits
-        if size_in_sol < self.config.min_position_sol || size_in_sol > self.config.max_position_sol {
+        if size_in_native < self.config.min_position_native || size_in_native > self.config.max_position_native {
             return false;
         }
 
         // Check position size relative to portfolio
-        let position_ratio = size_in_sol / current_portfolio_value;
+        let position_ratio = size_in_native / current_portfolio_value;
         if position_ratio > self.max_position_per_token {
             return false;
         }

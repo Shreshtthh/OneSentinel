@@ -12,13 +12,13 @@ pub struct PositionDocument {
     pub symbol: String,
     pub name: String,
     pub quantity: f64,
-    pub cost_basis_sol: f64,
+    pub cost_basis_native: f64,
     pub entry_timestamp: i64,
     pub partial_sells: Vec<PartialSell>,
-    pub current_price_sol: f64,
+    pub current_price_native: f64,
     pub current_price_usd: f64,
-    pub unrealized_pnl_sol: f64,
-    pub realized_pnl_sol: f64,
+    pub unrealized_pnl_native: f64,
+    pub realized_pnl_native: f64,
     pub last_updated: i64,
 }
 
@@ -34,11 +34,11 @@ impl PositionsCollection {
     }
 
     pub async fn upsert_position(&self, position: &PortfolioPosition, current_prices: (f64, f64)) -> Result<String> {
-        let (current_price_sol, current_price_usd) = current_prices;
+        let (current_price_native, current_price_usd) = current_prices;
         
-        let unrealized_pnl = (current_price_sol - position.cost_basis_sol) * position.quantity;
+        let unrealized_pnl = (current_price_native - position.cost_basis_native) * position.quantity;
         let realized_pnl: f64 = position.partial_sells.iter()
-            .map(|sell| (sell.price_sol - position.cost_basis_sol) * sell.quantity)
+            .map(|sell| (sell.price_native - position.cost_basis_native) * sell.quantity)
             .sum();
 
         let doc = PositionDocument {
@@ -46,13 +46,13 @@ impl PositionsCollection {
             symbol: position.token.symbol.clone(),
             name: position.token.name.clone(),
             quantity: position.quantity,
-            cost_basis_sol: position.cost_basis_sol,
+            cost_basis_native: position.cost_basis_native,
             entry_timestamp: position.entry_timestamp,
             partial_sells: position.partial_sells.clone(),
-            current_price_sol,
+            current_price_native,
             current_price_usd,
-            unrealized_pnl_sol: unrealized_pnl,
-            realized_pnl_sol: realized_pnl,
+            unrealized_pnl_native: unrealized_pnl,
+            realized_pnl_native: realized_pnl,
             last_updated: chrono::Utc::now().timestamp(),
         };
 
@@ -106,21 +106,21 @@ impl PositionsCollection {
         let positions = self.get_all_positions().await?;
         
         let mut stats = PortfolioStats {
-            total_value_sol: 0.0,
+            total_value_native: 0.0,
             total_value_usd: 0.0,
-            total_realized_pnl_sol: 0.0,
-            total_unrealized_pnl_sol: 0.0,
+            total_realized_pnl_native: 0.0,
+            total_unrealized_pnl_native: 0.0,
             position_count: positions.len(),
             profitable_positions: 0,
         };
 
         for pos in positions {
-            stats.total_value_sol += pos.quantity * pos.current_price_sol;
+            stats.total_value_native += pos.quantity * pos.current_price_native;
             stats.total_value_usd += pos.quantity * pos.current_price_usd;
-            stats.total_realized_pnl_sol += pos.realized_pnl_sol;
-            stats.total_unrealized_pnl_sol += pos.unrealized_pnl_sol;
+            stats.total_realized_pnl_native += pos.realized_pnl_native;
+            stats.total_unrealized_pnl_native += pos.unrealized_pnl_native;
             
-            if pos.unrealized_pnl_sol > 0.0 {
+            if pos.unrealized_pnl_native > 0.0 {
                 stats.profitable_positions += 1;
             }
         }
@@ -131,10 +131,10 @@ impl PositionsCollection {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PortfolioStats {
-    pub total_value_sol: f64,
+    pub total_value_native: f64,
     pub total_value_usd: f64,
-    pub total_realized_pnl_sol: f64,
-    pub total_unrealized_pnl_sol: f64,
+    pub total_realized_pnl_native: f64,
+    pub total_unrealized_pnl_native: f64,
     pub position_count: usize,
     pub profitable_positions: usize,
 } 

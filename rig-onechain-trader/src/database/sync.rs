@@ -9,7 +9,6 @@ use mongodb::{Database, bson::doc};
 use serde::{Serialize, Deserialize};
 use std::sync::Arc;
 use tracing::{info, warn};
-use rig::completion::CompletionModel;
 use fastcrypto::ed25519::Ed25519KeyPair;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,7 +17,7 @@ pub struct TokenState {
     pub symbol: String,
     pub name: String,
     pub price_usd: f64,
-    pub price_sol: f64,
+    pub price_native: f64,
     pub volume_24h: f64,
     pub market_cap: f64,
     pub price_change_24h: f64,
@@ -26,6 +25,7 @@ pub struct TokenState {
     pub timestamp: DateTime<Utc>,
 }
 
+#[allow(dead_code)]
 pub struct DataSyncService {
     db: Arc<Database>,
     data_provider: Box<dyn DataProvider>,
@@ -109,21 +109,21 @@ impl DataSyncService {
                 if let Ok(trade) = serde_json::from_str::<TradeRecommendation>(&analysis) {
                     info!(
                         "Received trade recommendation: Action={:?}, Amount={} SOL, Confidence={:.2}, Risk={}",
-                        trade.action, trade.amount_in_sol, trade.confidence, trade.risk_assessment
+                        trade.action, trade.amount_in_native, trade.confidence, trade.risk_assessment
                     );
                     
                     // Execute trade if confidence is high enough
                     if trade.confidence >= 0.8 {
                         match trade.action {
                             TradeAction::Buy => {
-                                info!("Executing BUY order for {} SOL worth of {}", 
-                                    trade.amount_in_sol, trend.metadata.symbol);
+                                info!("Executing BUY order for {} OCT worth of {}", 
+                                    trade.amount_in_native, trend.metadata.symbol);
                                 
                                 if let Ok(signature) = self.executor.execute_trade(crate::execution::TradeAction {
                                     action_type: crate::execution::TradeType::Buy,
                                     params: crate::execution::TradeParams {
                                         mint: trade.token_address.clone(),
-                                        amount: trade.amount_in_sol,
+                                        amount: trade.amount_in_native,
                                         slippage: 10,
                                         units: 1,
                                         client_order_id: 123,
@@ -153,7 +153,7 @@ Market Analysis:
 - Price Trend: {}
 - Liquidity: {}
 - Momentum: {}",
-                                            trade.amount_in_sol,
+                                            trade.amount_in_native,
                                             trend.metadata.symbol,
                                             trend.metadata.price_usd,
                                             trend.metadata.market_cap / 1_000_000.0,
@@ -188,14 +188,14 @@ Market Analysis:
                                 }
                             },
                             TradeAction::Sell => {
-                                info!("Executing SELL order for {} SOL worth of {}", 
-                                    trade.amount_in_sol, trend.metadata.symbol);
+                                info!("Executing SELL order for {} OCT worth of {}", 
+                                    trade.amount_in_native, trend.metadata.symbol);
                                 
                                 if let Ok(signature) = self.executor.execute_trade(crate::execution::TradeAction {
                                     action_type: crate::execution::TradeType::Sell,
                                     params: crate::execution::TradeParams {
                                         mint: trade.token_address.clone(),
-                                        amount: trade.amount_in_sol,
+                                        amount: trade.amount_in_native,
                                         slippage: 10,
                                         units: 1,
                                         client_order_id: 123,
@@ -225,7 +225,7 @@ Market Analysis:
 - Price Trend: {}
 - Liquidity: {}
 - Momentum: {}",
-                                            trade.amount_in_sol,
+                                            trade.amount_in_native,
                                             trend.metadata.symbol,
                                             trend.metadata.price_usd,
                                             trend.metadata.market_cap / 1_000_000.0,
@@ -285,7 +285,7 @@ Market Analysis:
             symbol: trend.metadata.symbol,
             name: trend.metadata.name,
             price_usd: trend.metadata.price_usd,
-            price_sol: trend.metadata.price_sol,
+            price_native: trend.metadata.price_native,
             volume_24h: trend.metadata.volume_24h,
             market_cap: trend.metadata.market_cap,
             price_change_24h: trend.price_change_24h,

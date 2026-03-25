@@ -1,5 +1,5 @@
 use rig::agent::Agent;
-use rig::completion::{CompletionModel, Prompt};
+use rig::completion::Prompt;
 use anyhow::Result;
 use std::collections::HashSet;
 use std::time::Duration;
@@ -43,10 +43,10 @@ impl StoicPersonality {
 5. Risk management emphasis
 
 When tweeting about trades:
-1. Always include exact amounts (e.g. "Bought 0.5 SOL worth of $TICKER")
+1. Always include exact amounts (e.g. "Bought 0.5 OCT worth of $TICKER")
 2. Include market cap ("MC: $xxxM")
 3. Always include contract address ("CA: address")
-4. Always include Solscan transaction link
+4. Always include OneChain explorer transaction link
 5. End with a stoic analysis based on actual market indicators:
    - Volume trends
    - Price action
@@ -84,10 +84,10 @@ When tweeting about trades:
             r#"{}
 
 Generate a tweet about this trade using the following template:
-[BUY/SELL] {:.2} SOL worth of token
+[BUY/SELL] {:.2} OCT worth of token
 MC: ${:.2}M | Risk: {:.1}% | Vol: {:.2}%
 CA: <contract_address>
-🔍 https://solscan.io/tx/<tx_id>
+https://explorer.onelabs.cc/tx/<tx_id>
 
 Technical Indicators:
 {}

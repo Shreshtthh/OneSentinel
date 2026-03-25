@@ -19,7 +19,7 @@ pub struct ExecutionEngine {
 pub struct ActiveOrder {
     pub token_address: String,
     pub order_type: OrderType,
-    pub size_in_sol: f64,
+    pub size_in_native: f64,
     pub entry_price: f64,
     pub stop_loss: f64,
     pub take_profits: Vec<f64>,
@@ -32,7 +32,7 @@ pub struct ActiveOrder {
 pub struct ExecutionRecord {
     pub token_address: String,
     pub order_type: OrderType,
-    pub size_in_sol: f64,
+    pub size_in_native: f64,
     pub execution_price: f64,
     pub slippage: f64,
     pub timestamp: DateTime<Utc>,
@@ -84,7 +84,7 @@ impl ExecutionEngine {
         }
 
         info!("Executing trade for token: {} ({:?})", token.symbol, decision.action);
-        debug!("Trade details - Size: {} SOL, Risk Score: {}", decision.size_in_sol, decision.risk_score);
+        debug!("Trade details - Size: {}, Risk Score: {}", decision.size_in_native, decision.risk_score);
 
         // 1. Validate execution parameters
         self.validate_execution_params(&decision.execution_params)
@@ -179,11 +179,11 @@ impl ExecutionEngine {
                 "Limit" => OrderType::Limit,
                 _ => OrderType::Market,
             },
-            size_in_sol: decision.size_in_sol,
-            entry_price: token.price_sol,
-            stop_loss: token.price_sol * (1.0 - decision.execution_params.stop_loss),
+            size_in_native: decision.size_in_native,
+            entry_price: token.price_native,
+            stop_loss: token.price_native * (1.0 - decision.execution_params.stop_loss),
             take_profits: decision.execution_params.take_profit.iter()
-                .map(|tp| token.price_sol * (1.0 + tp))
+                .map(|tp| token.price_native * (1.0 + tp))
                 .collect(),
             filled_amount: 0.0,
             status: OrderStatus::Pending,
@@ -197,12 +197,12 @@ impl ExecutionEngine {
     async fn submit_order(&self, order: ActiveOrder) -> Result<ExecutionRecord> {
         info!("Submitting order: {:?}", order);
         
-        // TODO: Implement actual order submission through Jupiter DEX
+        // TODO: Implement actual order submission through OneDEX
         // For now, simulate a successful market order
         let record = ExecutionRecord {
             token_address: order.token_address,
             order_type: order.order_type,
-            size_in_sol: order.size_in_sol,
+            size_in_native: order.size_in_native,
             execution_price: order.entry_price,
             slippage: 0.001, // 0.1% simulated slippage
             timestamp: Utc::now(),

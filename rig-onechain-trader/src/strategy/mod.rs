@@ -12,8 +12,8 @@
 //!
 //! # Risk Management
 //! Configurable parameters (via .env):
-//! - `MAX_POSITION_SIZE_SOL`: Maximum position size (default: 1.0 SOL)
-//! - `MIN_POSITION_SIZE_SOL`: Minimum position size (default: 0.1 SOL)
+//! - `MAX_POSITION_SIZE_native`: Maximum position size (default: 1.0 SOL)
+//! - `MIN_POSITION_SIZE_native`: Minimum position size (default: 0.1 SOL)
 //! - `MAX_TOKENS_PER_WALLET`: Maximum concurrent positions
 //! - `STOP_LOSS_PERCENTAGE`: Auto stop-loss trigger
 //! - `TAKE_PROFIT_PERCENTAGE`: Auto take-profit levels
@@ -33,8 +33,7 @@ pub mod execution;
 
 use crate::market_data::{EnhancedTokenMetadata, FeatureVector, MacroIndicator};
 use anyhow::Result;
-use rig::agent::Agent;
-use rig::completion::CompletionModel;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use chrono::Utc;
@@ -44,7 +43,7 @@ use crate::agents::TradingAgentSystem;
 pub struct PortfolioPosition {
     pub token: EnhancedTokenMetadata,
     pub quantity: f64,
-    pub cost_basis_sol: f64,
+    pub cost_basis_native: f64,
     pub entry_timestamp: i64,
     pub partial_sells: Vec<PartialSell>,
     #[serde(default)]
@@ -54,7 +53,7 @@ pub struct PortfolioPosition {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PartialSell {
     pub quantity: f64,
-    pub price_sol: f64,
+    pub price_native: f64,
     pub timestamp: i64,
     pub tx_signature: Option<String>,
 }
@@ -63,7 +62,7 @@ pub struct PartialSell {
 pub struct TradingDecision {
     pub token_address: String,
     pub action: TradeAction,
-    pub size_in_sol: f64,
+    pub size_in_native: f64,
     pub confidence: f64,
     pub reasoning: String,
     pub risk_score: f64,
@@ -115,6 +114,7 @@ pub enum TradeAction {
     Hold
 }
 
+#[allow(dead_code)]
 pub struct TradingStrategy {
     pub agent: TradingAgentSystem,
     risk_manager: risk::RiskManager,
@@ -126,8 +126,8 @@ pub struct TradingStrategy {
 
 #[derive(Debug, Clone)]
 pub struct StrategyConfig {
-    pub max_position_sol: f64,
-    pub min_position_sol: f64,
+    pub max_position_native: f64,
+    pub min_position_native: f64,
     pub max_tokens: u32,
     pub min_confidence: f64,
     pub min_liquidity_usd: f64,
@@ -138,7 +138,7 @@ pub struct StrategyConfig {
 #[derive(Debug, Deserialize)]
 pub struct TradeRecommendation {
     pub action: TradeAction,
-    pub amount_in_sol: f64,
+    pub amount_in_native: f64,
     pub confidence: f64,
     pub risk_assessment: String,
     pub token_address: String,
@@ -293,7 +293,7 @@ Provide trading analysis and recommendation in a concise format."#,
         Ok(TradingDecision {
             token_address: token.address.clone(),
             action,
-            size_in_sol: size,
+            size_in_native: size,
             confidence: technical_signals.trend_strength * (1.0 - risk_score),
             reasoning: llm_analysis,
             risk_score,
@@ -304,13 +304,13 @@ Provide trading analysis and recommendation in a concise format."#,
     }
 
     fn calculate_position_size(&self, risk_score: f64, trend_strength: f64) -> f64 {
-        let base_size = self.config.max_position_sol * 0.2;
+        let base_size = self.config.max_position_native * 0.2;
         let risk_multiplier = 1.0 - risk_score;
         let trend_multiplier = trend_strength;
         
         (base_size * risk_multiplier * trend_multiplier)
-            .max(self.config.min_position_sol)
-            .min(self.config.max_position_sol)
+            .max(self.config.min_position_native)
+            .min(self.config.max_position_native)
     }
 
     fn generate_execution_params(&self, signals: &TechnicalSignals, risk_score: f64) -> ExecutionParams {
@@ -327,7 +327,7 @@ Provide trading analysis and recommendation in a concise format."#,
         }
     }
 
-    pub fn update_portfolio(&mut self, token: EnhancedTokenMetadata, quantity: f64, cost_basis_sol: f64) {
+    pub fn update_portfolio(&mut self, token: EnhancedTokenMetadata, quantity: f64, cost_basis_native: f64) {
         let now = Utc::now().timestamp();
         let _token_address = token.address.clone();
         self.portfolio.insert(
@@ -335,7 +335,7 @@ Provide trading analysis and recommendation in a concise format."#,
             PortfolioPosition {
                 token,
                 quantity,
-                cost_basis_sol,
+                cost_basis_native,
                 entry_timestamp: now,
                 partial_sells: Vec::new(),
                 mongodb_id: None,
@@ -347,7 +347,7 @@ Provide trading analysis and recommendation in a concise format."#,
         &mut self,
         token_address: &str,
         quantity: f64,
-        price_sol: f64,
+        price_native: f64,
     ) -> Result<()> {
         let position = self.portfolio.get_mut(token_address)
             .ok_or_else(|| anyhow::anyhow!("Position not found"))?;
@@ -355,7 +355,7 @@ Provide trading analysis and recommendation in a concise format."#,
         let now = Utc::now().timestamp();
         position.partial_sells.push(PartialSell {
             quantity,
-            price_sol,
+            price_native,
             timestamp: now,
             tx_signature: None,
         });

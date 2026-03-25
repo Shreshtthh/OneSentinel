@@ -3,6 +3,7 @@ use anyhow::Result;
 
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct TechnicalAnalyzer {
     rsi_period: u32,
     macd_fast: u32,

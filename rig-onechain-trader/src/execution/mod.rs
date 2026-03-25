@@ -5,12 +5,16 @@ use std::sync::Arc;
 use fastcrypto::ed25519::Ed25519KeyPair;
 use onechain_sdk::SuiClient;
 use onechain_sdk::types::base_types::{ObjectID, SuiAddress};
-use onechain_sdk::types::transaction::{TransactionData, ObjectArg, Transaction, SharedObjectMutability};
+use onechain_sdk::types::transaction::{TransactionData, Transaction};
 use onechain_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use onechain_sdk::types::Identifier;
 use onechain_sdk::rpc_types::SuiTransactionBlockResponseOptions;
 use onechain_sdk::types::quorum_driver_types::ExecuteTransactionRequestType;
 use shared_crypto::intent::Intent;
+
+// Mainnet-only imports (used in the commented DeepBook PTB block)
+// use onechain_sdk::types::transaction::{ObjectArg, SharedObjectMutability};
+// use onechain_sdk::types::Identifier;
+// use onechain_sdk::rpc_types::SuiObjectDataOptions;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TradeParams {
@@ -41,6 +45,7 @@ pub struct TradeAnalysis {
     pub risk_assessment: f64,
 }
 
+#[allow(dead_code)]
 pub struct OneChainExecutor {
     keypair: Arc<fastcrypto::ed25519::Ed25519KeyPair>,
     address: SuiAddress,
@@ -93,7 +98,7 @@ impl OneChainExecutor {
         let gas_coin_ref = gas_coin.object_ref();
         
         // Use a safe minimum amount to transfer to ourselves (e.g. 10_000 Mist) to log the TxHash
-        let amount_u64 = 10_000u64; 
+        let _amount_u64 = 10_000u64; // Reserved for Mainnet PTB sizing
 
         /* =========================================================================
            MAINNET ONEDEX / DEEPBOOK PTB INTEGRATION
@@ -165,7 +170,7 @@ impl OneChainExecutor {
         );
         ========================================================================= */
 
-        let mut pt_builder = ProgrammableTransactionBuilder::new();
+        let pt_builder = ProgrammableTransactionBuilder::new();
         // To bypass complex FullObjectRef requirements for testnet native transfers, we simply execute an empty ProgrammableTransactionBlock.
         // It successfully burns gas, mathematically verifies the AI intent signature, and returns a completely valid native On-Chain TxHash!
         let pt = pt_builder.finish();
@@ -180,13 +185,22 @@ impl OneChainExecutor {
         );
 
         let intent_msg = shared_crypto::intent::IntentMessage::new(Intent::sui_transaction(), tx_data.clone());
-        let raw_sig = fastcrypto::traits::Signer::sign(self.keypair.as_ref(), &bcs::to_bytes(&intent_msg).unwrap());
-        let mut sig_bytes = vec![0x00];
+        use fastcrypto::hash::{Blake2b256, HashFunction};
+        let mut hasher = Blake2b256::default();
+        hasher.update(&bcs::to_bytes(&intent_msg).unwrap());
+        let digest = hasher.finalize().digest;
+        let raw_sig: fastcrypto::ed25519::Ed25519Signature = fastcrypto::traits::Signer::sign(self.keypair.as_ref(), &digest);
+        // Build the 97-byte Ed25519 signature: [scheme_flag(1) | raw_signature(64) | public_key(32)]
+        let mut sig_bytes = vec![0x00u8]; // Ed25519 scheme flag
         sig_bytes.extend_from_slice(raw_sig.as_ref());
-        use fastcrypto::traits::KeyPair as _; // local import to avoid conflict
+        use fastcrypto::traits::KeyPair as _;
         sig_bytes.extend_from_slice(self.keypair.public().as_ref());
-        // Use standard parse or from_bcs from the sui_sdk natively
-        let signature: onechain_sdk::types::crypto::Signature = bcs::from_bytes(&sig_bytes).unwrap_or_else(|_| panic!("Failed parsing sig bytes"));
+        // Use the SDK's native parser which expects exactly this byte layout
+        use onechain_sdk::types::crypto::Ed25519SuiSignature;
+        use fastcrypto::traits::ToFromBytes;
+        let sui_sig = Ed25519SuiSignature::from_bytes(&sig_bytes)
+            .map_err(|e| anyhow::anyhow!("Failed to construct Ed25519SuiSignature: {}", e))?;
+        let signature: onechain_sdk::types::crypto::Signature = sui_sig.into();
         let transaction = Transaction::from_data(tx_data, vec![signature]);
 
         let response = self.client

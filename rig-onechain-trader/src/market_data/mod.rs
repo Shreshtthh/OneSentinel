@@ -34,7 +34,7 @@ pub struct MarketContext {
     pub sector_performance: f64,
 }
 use tokio::sync::RwLock;
-use tracing::debug;
+
 use crate::database::DatabaseClient;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -47,7 +47,7 @@ pub struct EnhancedTokenMetadata {
     
     // Price metrics
     pub price_usd: f64,
-    pub price_sol: f64,
+    pub price_native: f64,
     pub price_change_1h: f64,
     pub price_change_24h: f64,
     pub price_change_7d: f64,
@@ -65,7 +65,7 @@ pub struct EnhancedTokenMetadata {
     
     // Liquidity metrics
     pub liquidity_usd: f64,
-    pub liquidity_sol: f64,
+    pub liquidity_native: f64,
     pub liquidity_change_24h: f64,
     
     // Technical indicators
@@ -91,7 +91,7 @@ pub struct EnhancedTokenMetadata {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MacroIndicator {
     pub timestamp: DateTime<Utc>,
-    pub sol_dominance: f64,
+    pub native_dominance: f64,
     pub total_market_cap: f64,
     pub total_volume_24h: f64,
     pub market_trend: String,
@@ -154,6 +154,7 @@ pub trait DataProvider: Send + Sync + std::fmt::Debug {
 #[derive(Debug)]
 pub struct AggregatedDataProvider {
     providers: Vec<Arc<dyn DataProvider>>,
+    #[allow(dead_code)]
     cache: Arc<RwLock<DataCache>>,
 }
 
@@ -240,11 +241,13 @@ impl DataProvider for AggregatedDataProvider {
 }
 
 #[derive(Debug, Default)]
+#[allow(dead_code)]
 struct DataCache {
     metadata_cache: HashMap<String, (EnhancedTokenMetadata, DateTime<Utc>)>,
     trends_cache: HashMap<String, (Vec<MarketTrend>, DateTime<Utc>)>,
 }
 
+#[allow(dead_code)]
 pub struct MarketDataProvider {
     db_client: DatabaseClient,
     // ... existing fields ...
@@ -258,9 +261,8 @@ impl MarketDataProvider {
         })
     }
 
-    pub async fn analyze_token(&mut self, token_address: &str) -> Result<()> {
-        debug!("Analyzing token {}", token_address);
-        // Vector store integration removed for MVP
+    pub async fn analyze_token(&mut self, _token_address: &str) -> Result<()> {
+        // Market analysis stub for MVP
         Ok(())
     }
 
@@ -268,6 +270,7 @@ impl MarketDataProvider {
         Ok(None)
     }
 
+    #[allow(dead_code)]
     async fn analyze_market_sentiment(&self, _market_data: &MarketData) -> Result<String> {
         // TODO: Implement sentiment analysis using LLM
         // For now return a placeholder
@@ -295,7 +298,7 @@ mod tests {
                 name: format!("Test Token {}", self.name),
                 decimals: 9,
                 price_usd: 1.0,
-                price_sol: 0.01,
+                price_native: 0.01,
                 price_change_1h: 0.0,
                 price_change_24h: 0.0,
                 price_change_7d: 0.0,
@@ -307,7 +310,7 @@ mod tests {
                 circulating_supply: 1000000.0,
                 total_supply: 2000000.0,
                 liquidity_usd: 0.0,
-                liquidity_sol: 0.0,
+                liquidity_native: 0.0,
                 liquidity_change_24h: 0.0,
                 rsi_14: None,
                 macd: None,
@@ -340,7 +343,7 @@ mod tests {
                         name: format!("Test Token {} {}", self.name, i),
                         decimals: 9,
                         price_usd: 1.0,
-                        price_sol: 0.01,
+                        price_native: 0.01,
                         volume_24h: 1000000.0,
                         market_cap: 10000000.0,
                         fully_diluted_market_cap: 20000000.0,

@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! BirdEye API Integration
 //!
 //! This module implements the BirdEye API client for fetching OneChain token data.
@@ -58,7 +59,7 @@ struct BirdEyeTokenData {
     price: f64,
     volume_24h: f64,
     decimals: u8,
-    price_sol: f64,
+    price_native: f64,
     market_cap: f64,
     fully_diluted_market_cap: Option<f64>,
     circulating_supply: Option<f64>,
@@ -356,7 +357,7 @@ impl BirdEyeProvider {
                 name: token.name,
                 decimals: token.decimals,
                 price_usd: 0.0, // Not available in new listings
-                price_sol: 0.0,
+                price_native: 0.0,
                 volume_24h: 0.0,
                 market_cap: 0.0,
                 ..Default::default()
@@ -400,7 +401,7 @@ impl BirdEyeProvider {
                 name: token.name,
                 decimals: token.decimals,
                 price_usd: 0.0, // Need to fetch separately
-                price_sol: 0.0,
+                price_native: 0.0,
                 volume_24h: token.v24h_usd,
                 market_cap: token.mc,
                 ..Default::default()
@@ -473,7 +474,7 @@ impl BirdEyeProvider {
                 name: token.name,
                 decimals: token.decimals,
                 price_usd: token.price,
-                price_sol: token.price, // Price is in USD
+                price_native: token.price, // Price is in USD
                 volume_24h: token.volume_24h_usd.unwrap_or(0.0),
                 market_cap: 0.0, // Not available in trending response
                 ..Default::default()
@@ -525,7 +526,7 @@ impl DataProvider for BirdEyeProvider {
             name: metadata.name.clone(),
             decimals: metadata.decimals,
             price_usd: market_data.data.price,
-            price_sol: market_data.data.price, // Price is in USD
+            price_native: market_data.data.price, // Price is in USD
             volume_24h: 0.0, // Not available in this endpoint
             market_cap: market_data.data.marketcap,
             ..Default::default()
@@ -611,7 +612,7 @@ impl DataProvider for BirdEyeProvider {
     async fn get_macro_indicators(&self) -> Result<crate::market_data::MacroIndicator> {
         Ok(crate::market_data::MacroIndicator {
             timestamp: chrono::Utc::now(),
-            sol_dominance: 0.0,
+            native_dominance: 0.0,
             total_market_cap: 0.0,
             total_volume_24h: 0.0,
             market_trend: "Neutral".to_string(),

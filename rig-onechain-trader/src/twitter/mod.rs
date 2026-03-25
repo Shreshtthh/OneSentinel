@@ -4,6 +4,7 @@ use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+#[allow(dead_code)]
 pub struct TwitterClient {
     client: Client,
     username: String,

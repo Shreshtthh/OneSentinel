@@ -108,6 +108,7 @@ impl MarketDataStorage {
         }
     }
 
+    #[allow(dead_code)]
     async fn save_to_disk(&self) -> Result<()> {
         self.save_token_data().await?;
         self.save_market_snapshots().await?;
@@ -357,7 +358,7 @@ mod tests {
             name: "Test Token".to_string(),
             decimals: 9,
             price_usd: 1.0,
-            price_sol: 0.01,
+            price_native: 0.01,
             volume_24h: 1000000.0,
             market_cap: 10000000.0,
             fully_diluted_market_cap: 20000000.0,
