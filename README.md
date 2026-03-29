@@ -13,6 +13,8 @@ All cryptographic operations - key derivation, transaction serialization, `Blake
 
 > **No browser extensions. No wallet popups. No emotions. Pure autonomous execution.**
 
+Note - This project was initially built upon the foundation of dprc-autotrader-v2 by affaan-m. While the original repository provided an excellent starting point for an LLM-driven trading agent in Rust, adapting it for this MVP required a comprehensive architectural overhaul. Significant structural changes were made to strip out the legacy HTTP-based DEX wrappers (such as Jupiter) and rebuild the execution engine from the ground up to support native Move-based integration and direct DeepBook PTB logic
+
 ---
 
 ## Table of Contents
