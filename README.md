@@ -7,9 +7,9 @@
 ![Network](https://img.shields.io/badge/Network-OneChain-green.svg)
 ![AI](https://img.shields.io/badge/AI-Multi_Agent_LLM-purple.svg)
 
-OneSentinel is a fully autonomous, backend-only AI trading agent built natively for OneChain. It requires **zero human intervention** after boot — no wallets to unlock, no browser extensions to approve, no manual decisions to make. The agent continuously analyzes real-time market data, passes it through a three-agent LLM reasoning pipeline, enforces strict risk constraints, and executes cryptographically signed transactions directly on the OneChain ledger using SUI-compatible Programmable Transaction Blocks (PTBs).
+OneSentinel is a fully autonomous, backend-only AI trading agent built natively for OneChain. It requires **zero human intervention** after boot - no wallets to unlock, no browser extensions to approve, no manual decisions to make. The agent continuously analyzes real-time market data, passes it through a three-agent LLM reasoning pipeline, enforces strict risk constraints, and executes cryptographically signed transactions directly on the OneChain ledger using SUI-compatible Programmable Transaction Blocks (PTBs).
 
-All cryptographic operations — key derivation, transaction serialization, `Blake2b256` hashing, Ed25519 signing — happen entirely in native Rust, with no external wallet software. The signed transaction is broadcast directly to OneChain validators via the Quorum Driver API and returns a verifiable on-chain digest.
+All cryptographic operations - key derivation, transaction serialization, `Blake2b256` hashing, Ed25519 signing - happen entirely in native Rust, with no external wallet software. The signed transaction is broadcast directly to OneChain validators via the Quorum Driver API and returns a verifiable on-chain digest.
 
 > **No browser extensions. No wallet popups. No emotions. Pure autonomous execution.**
 
@@ -33,20 +33,20 @@ All cryptographic operations — key derivation, transaction serialization, `Bla
 
 ## How It Works
 
-OneSentinel operates as a headless Rust binary — no UI, no frontend, no human in the loop. On startup, it performs the following:
+OneSentinel operates as a headless Rust binary - no UI, no frontend, no human in the loop. On startup, it performs the following:
 
 1. **Derives a cryptographic wallet** from your `AGENT_MNEMONIC` using the `fastcrypto` Ed25519 key derivation path `m/44'/784'/0'/0'/0'`. No browser extension. No seed phrase entry. The key lives entirely in process memory during runtime.
 
 2. **Connects to the OneChain RPC** at `rpc-testnet.onelabs.cc` (configurable via `ONECHAIN_RPC_URL`). Uses the native `onechain-sdk` (SUI-compatible) to interface with the ledger, including coin queries and transaction submission.
 
-3. **Ingests market data** from the Birdeye API — real-time token prices, 24-hour volume, liquidity depth, market cap, and social sentiment signals. This data is enriched with technical indicators (RSI, MACD, MA50/200) computed locally in `strategy/technical.rs`.
+3. **Ingests market data** from the Birdeye API - real-time token prices, 24-hour volume, liquidity depth, market cap, and social sentiment signals. This data is enriched with technical indicators (RSI, MACD, MA50/200) computed locally in `strategy/technical.rs`.
 
 4. **Routes the enriched data through a 3-agent LLM system** powered by `rig-core`:
-   - **Market Analyst** (`agents/mod.rs`) — Evaluates price momentum, volume trends, and social sentiment to produce a conviction score and narrative reasoning.
-   - **Risk Manager** (`agents/mod.rs`) — Assesses liquidity risk, volatility risk, and market risk. Can veto any trade that violates safety thresholds.
-   - **Execution Specialist** (`agents/mod.rs`) — Determines optimal entry parameters: position size, stop-loss, take-profit, and entry price.
+   - **Market Analyst** (`agents/mod.rs`) - Evaluates price momentum, volume trends, and social sentiment to produce a conviction score and narrative reasoning.
+   - **Risk Manager** (`agents/mod.rs`) - Assesses liquidity risk, volatility risk, and market risk. Can veto any trade that violates safety thresholds.
+   - **Execution Specialist** (`agents/mod.rs`) - Determines optimal entry parameters: position size, stop-loss, take-profit, and entry price.
 
-5. **Runs the 5-stage decision pipeline** in `strategy/pipeline.rs` — the final `TradingDecision` is only produced if all agents agree and the risk manager approves the position size.
+5. **Runs the 5-stage decision pipeline** in `strategy/pipeline.rs` - the final `TradingDecision` is only produced if all agents agree and the risk manager approves the position size.
 
 6. **Constructs a Programmable Transaction Block (PTB)** locally in Rust using `ProgrammableTransactionBuilder` from the `onechain-sdk`.
 
@@ -54,7 +54,7 @@ OneSentinel operates as a headless Rust binary — no UI, no frontend, no human 
 
 8. **Broadcasts the signed transaction** to OneChain validators via the Quorum Driver API (`execute_transaction_block`) and receives a cryptographically verified on-chain digest.
 
-The entire cycle — from data ingestion to on-chain confirmation — completes in under 3 seconds.
+The entire cycle - from data ingestion to on-chain confirmation - completes in under 3 seconds.
 
 ---
 
@@ -133,7 +133,7 @@ sequenceDiagram
 **Key safety properties:**
 - The **Risk Manager** can veto any trade whose proposed size exceeds `risk_threshold` (default: `0.8` OCT), enforced in `execution/mod.rs::validate_risk()`.
 - Stop-loss and take-profit boundaries are computed by the Execution Specialist before any PTB is constructed.
-- **Gas coin isolation**: the executor explicitly queries available coins and selects the largest as the gas payment coin. The trade input coin (for mainnet) must be a *different* object — preventing the agent from accidentally spending its own execution budget.
+- **Gas coin isolation**: the executor explicitly queries available coins and selects the largest as the gas payment coin. The trade input coin (for mainnet) must be a *different* object - preventing the agent from accidentally spending its own execution budget.
 - All decisions are persisted to MongoDB with the full LLM reasoning chain via `database/sync.rs`, creating a complete audit trail.
 - The `min_confidence` threshold (default: `0.6`) in `StrategyConfig` prevents the agent from acting on low-conviction signals.
 
@@ -158,7 +158,7 @@ flowchart LR
 **Testnet mode** uses an **empty PTB** (zero Move calls). The `ProgrammableTransactionBuilder` is finished immediately without adding any commands:
 ```rust
 let pt_builder = ProgrammableTransactionBuilder::new();
-let pt = pt_builder.finish(); // Empty — no Move calls
+let pt = pt_builder.finish(); // Empty - no Move calls
 ```
 This empty block is still wrapped in a real `IntentMessage`, hashed with `Blake2b256`, signed with the Ed25519 private key, serialized into a 97-byte signature envelope, and submitted to the Quorum Driver API. Validators verify the cryptographic signature and structural validity, burn gas, and return a real transaction digest. **No token swap occurs**, but the complete signing pipeline is proven to work.
 
@@ -293,7 +293,7 @@ This validates wallet generation, RPC binding, and executor initialization witho
 
 ## Demo Video Script
 
-This section is a **precise, step-by-step walkthrough** for recording or presenting the demo. It documents what each line of terminal output means, what is real infrastructure, and what is intentionally mocked for demo stability.
+This section is a **precise, step-by-step walkthrough** for the demo. It documents what each line of terminal output means, what is real infrastructure, and what is intentionally mocked for demo stability.
 
 ### Prerequisites
 
@@ -304,7 +304,7 @@ Before starting the recording:
 
 ---
 
-### Step 1 — Launch the demo
+### Step 1 - Launch the demo
 
 ```bash
 cd rig-onechain-trader
@@ -325,12 +325,12 @@ cargo run --bin demo
 
 | What you see | Real or Mocked? |
 |---|---|
-| RPC URL printed | ✅ **Real** — connects to `rpc-testnet.onelabs.cc:443` via `onechain-sdk` |
-| Wallet derivation | ✅ **Real** — `fastcrypto` Ed25519 `m/44'/784'/0'/0'/0'` key derivation from `AGENT_MNEMONIC` |
+| RPC URL printed | ✅ **Real** - connects to `rpc-testnet.onelabs.cc:443` via `onechain-sdk` |
+| Wallet derivation | ✅ **Real** - `fastcrypto` Ed25519 `m/44'/784'/0'/0'/0'` key derivation from `AGENT_MNEMONIC` |
 
 ---
 
-### Step 2 — Wallet is printed, fund it
+### Step 2 - Wallet is printed, fund it
 
 **Terminal output:**
 ```
@@ -354,12 +354,12 @@ Press ENTER when your wallet is funded...
 
 | What you see | Real or Mocked? |
 |---|---|
-| Wallet address | ✅ **Real** — mathematically derived from your mnemonic, unique every time |
-| Faucet OCT tokens | ✅ **Real** — actual testnet tokens sent from OneLabs faucet to the agent address |
+| Wallet address | ✅ **Real** - mathematically derived from your mnemonic, unique every time |
+| Faucet OCT tokens | ✅ **Real** - actual testnet tokens sent from OneLabs faucet to the agent address |
 
 ---
 
-### Step 3 — AI Brain boots
+### Step 3 - AI Brain boots
 
 **Terminal output:**
 ```
@@ -374,13 +374,13 @@ Press ENTER when your wallet is funded...
 
 | What you see | Real or Mocked? |
 |---|---|
-| LLM agent initialization | ✅ **Real** — connects to live OpenAI/Groq API endpoint |
-| Strategy config | ✅ **Real** — hardcoded production-grade safety thresholds |
-| DeepBook object IDs | 🟡 **Mocked** — placeholder hex IDs (`0x000...dee9`, `0x111...`, `0x222...`) since OneDEX mainnet contracts aren't deployed yet |
+| LLM agent initialization | ✅ **Real** - connects to live OpenAI/Groq API endpoint |
+| Strategy config | ✅ **Real** - hardcoded production-grade safety thresholds |
+| DeepBook object IDs | 🟡 **Mocked** - placeholder hex IDs (`0x000...dee9`, `0x111...`, `0x222...`) since OneDEX mainnet contracts aren't deployed yet |
 
 ---
 
-### Step 4 — AI market analysis runs
+### Step 4 - AI market analysis runs
 
 **Terminal output:**
 ```
@@ -403,18 +403,18 @@ Feature Vector:  [price_momentum=0.05, volatility=0.12,
 Macro:           Market trend = "bullish", Fear/Greed = 65
 ```
 
-These inputs are sent as a structured prompt to the live LLM. The reasoning, conviction score, and trade action are **entirely generated by the model in real time** — they differ on every run.
+These inputs are sent as a structured prompt to the live LLM. The reasoning, conviction score, and trade action are **entirely generated by the model in real time** - they differ on every run.
 
 | What you see | Real or Mocked? |
 |---|---|
-| Token market data | 🟡 **Mocked** — hardcoded `TEST_TOKEN` JSON, no live Birdeye API call |
-| LLM reasoning & thesis | ✅ **Real** — live inference from OpenAI/Groq, unique every run |
-| Action (Buy/Sell/Hold) | ✅ **Real** — decided by the multi-agent pipeline, not hardcoded |
-| Position size | ✅ **Real** — computed by the Execution Specialist agent, capped by `risk_threshold = 0.8` |
+| Token market data | 🟡 **Mocked** - hardcoded `TEST_TOKEN` JSON, no live Birdeye API call |
+| LLM reasoning & thesis | ✅ **Real** - live inference from OpenAI/Groq, unique every run |
+| Action (Buy/Sell/Hold) | ✅ **Real** - decided by the multi-agent pipeline, not hardcoded |
+| Position size | ✅ **Real** - computed by the Execution Specialist agent, capped by `risk_threshold = 0.8` |
 
 ---
 
-### Step 5 — Transaction executes on-chain
+### Step 5 - Transaction executes on-chain
 
 **Terminal output:**
 ```
@@ -426,8 +426,8 @@ These inputs are sent as a structured prompt to the live LLM. The reasoning, con
 ```
 
 **What happens internally (in `execution/mod.rs`):**
-1. `validate_risk()` checks that `amount (0.5) < risk_threshold (0.8)` — passes
-2. `coin_read_api().get_coins()` — real RPC call to fetch agent's coin objects
+1. `validate_risk()` checks that `amount (0.5) < risk_threshold (0.8)` - passes
+2. `coin_read_api().get_coins()` - real RPC call to fetch agent's coin objects
 3. Selects the largest coin as the gas payment coin (real coin object ref from the faucet)
 4. Builds an **empty** `ProgrammableTransactionBlock` (no Move calls)
 5. Wraps in `IntentMessage::new(Intent::sui_transaction(), tx_data)`
@@ -439,17 +439,17 @@ These inputs are sent as a structured prompt to the live LLM. The reasoning, con
 
 | What you see | Real or Mocked? |
 |---|---|
-| Risk validation | ✅ **Real** — position size check against `risk_threshold` runs on every trade |
-| Coin fetch from RPC | ✅ **Real** — live call to `rpc-testnet.onelabs.cc` |
-| PTB contents | 🟡 **Empty PTB** — no DeepBook swap call; ensures ledger validation without deployed contracts |
-| Signing pipeline (hash → sign → serialize) | ✅ **Real** — full `Blake2b256` + Ed25519 + `IntentMessage` as required by OneChain protocol |
-| Transaction submission | ✅ **Real** — broadcast to actual OneChain validators via Quorum Driver |
-| Transaction digest | ✅ **Real** — verifiable on the OneChain testnet explorer |
-| Token swap | ❌ **Does not happen** — empty PTB means no assets move (by design for testnet demo) |
+| Risk validation | ✅ **Real** - position size check against `risk_threshold` runs on every trade |
+| Coin fetch from RPC | ✅ **Real** - live call to `rpc-testnet.onelabs.cc` |
+| PTB contents | 🟡 **Empty PTB** - no DeepBook swap call; ensures ledger validation without deployed contracts |
+| Signing pipeline (hash → sign → serialize) | ✅ **Real** - full `Blake2b256` + Ed25519 + `IntentMessage` as required by OneChain protocol |
+| Transaction submission | ✅ **Real** - broadcast to actual OneChain validators via Quorum Driver |
+| Transaction digest | ✅ **Real** - verifiable on the OneChain testnet explorer |
+| Token swap | ❌ **Does not happen** - empty PTB means no assets move (by design for testnet demo) |
 
 ---
 
-### Step 6 — Demo complete
+### Step 6 - Demo complete
 
 **Terminal output:**
 ```
